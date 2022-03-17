@@ -32,6 +32,27 @@ export async function createShorten(req, res) {
         
     } catch (error) {
         console.log(error);
-    return res.sendStatus(500);
+        return res.sendStatus(500);
+    }
+}
+
+export async function getShorten(req, res) {
+    const shortUrl = req.params.shortUrl
+
+    try {
+        const row = await connection.query(`
+        SELECT u.id, u."shortUrl", u.url FROM urls u
+        WHERE "shortUrl"=$1
+        `,[shortUrl])
+
+        if (row.rowCount === 0) {
+            return res.sendStatus(401)
+        }
+
+        const short = row.rows[0]
+        res.send(short)
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500);
     }
 }

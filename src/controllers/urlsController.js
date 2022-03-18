@@ -56,3 +56,38 @@ export async function getShorten(req, res) {
         return res.sendStatus(500);
     }
 }
+
+export async function deleteShorten(req, res) {
+    const authorization = req.headers.authorization;
+    const token = authorization?.replace("Bearer ", "")
+    const id = req.params.id
+
+    try {
+        const rowToken = await connection.query(`
+        select s."userId" from sessions s
+        where s."token"=$1
+        `,[token])
+        const idToken = rowToken.rows[0].userId
+
+        const rowIdParam = await connection.query(`
+        select u."userId" from urls u
+        where u.id=$1
+        `,[id])
+        const idUserUrl = rowIdParam.rows[0].userId
+
+        if (idUserUrl !==idToken) {
+            return res.sendStatus(401)
+        }
+        
+        await connection.query(`
+        delete from urls
+        where urls.id=$1
+        `,[id])
+        
+        res.sendStatus(204)
+
+    } catch (error) {
+        console.log(error);
+        return res.sendStatus(500); 
+    }
+}
